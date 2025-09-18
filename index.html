@@ -12,9 +12,9 @@
   <circle cx='35' cy='85' r='6' fill='lime'/>
 </svg>">
 <style>
-  body, label, header { margin:0; padding: 0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#111; color:white; font-family: monospace; touch-action: none;}
-  canvas { background:#000; border:2px solid gray; }
-  header {flex-direction: row; gap: 100px; height: 5%;}
+  body, label, header { margin:0; padding: 0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#111; color:white; font-family: monospace;}
+  canvas { background:#000; border:2px solid gray; touch-action: none; }
+  header {flex-direction: row; gap: 100px; height: 50px;}
   input {margin-bottom: 0;}
   label {height:0;flex-direction:row;}
   span {position:absolute; align-items:center; justify-content:center; top:60%; border:2px solid #fff; padding: 1%;}
@@ -42,13 +42,12 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 canvas.width = window.innerWidth - 50;
 canvas.height = window.innerHeight - 50;
-const rect = canvas.getBoundingClientRect();
 
 let playing, snapshot;
 const gameOverMessage = (msg, color, freq, type) => { if (playing) replay.hidden = playing = false, playTone(audioCtx, freq, type), overlayMessage(canvas, ctx, msg, color); };
 const lose = (reason) => gameOverMessage(`You Lost!(${reason})`, "red", 100, "square");
 const win = () => gameOverMessage(`You Win! (${timeEl.textContent}s)`, "lime", 700, "triangle");
-const pixelColorAt = (e) => closestColor({ blue:[0, 0, 255], lime:[0, 255, 0], white:[255, 255, 255], other: [0,0,0] }, ...ctx.getImageData(e.offsetX, e.offsetY, 1, 1).data);
+const pixelColorAt = (e) => closestColor({blue:[0,0,255],lime:[0,255,0],white:[255,255,255],other:[0,0,0]}, ...ctx.getImageData(e.offsetX, e.offsetY, 1, 1).data);
 const makeGame = (pathWidth) => (replay.hidden=true,canvas.style.borderColor = "gray",snapshot = drawGame(canvas, ctx, +pathWidth));
 const tick = (t0) => { if (playing) timeEl.textContent = Math.floor(performance.now() - t0)/1000, requestAnimationFrame(() => tick(t0)) };
 
