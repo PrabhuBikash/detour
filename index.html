@@ -12,9 +12,9 @@
   <circle cx='35' cy='85' r='6' fill='lime'/>
 </svg>">
 <style>
-  body, label, header { margin:0; padding: 0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#111; color:white; font-family: monospace; }
+  body, label, header { margin:0; padding: 0; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#111; color:white; font-family: monospace; touch-action: none;}
   canvas { background:#000; border:2px solid gray; }
-  header {flex-direction: row; gap: 100px;}
+  header {flex-direction: row; gap: 100px; height: 5%;}
   input {margin-bottom: 0;}
   label {height:0;flex-direction:row;}
   span {position:absolute; align-items:center; justify-content:center; top:60%; border:2px solid #fff; padding: 1%;}
@@ -24,7 +24,7 @@
 </head>
 <body>
   <header>
-    <p>Time:<time>0</time>ms</p>
+    <p>Time:<time>0</time>s</p>
     <label><input type="range" id="slider" min="5" max="100" value="20" oninput="makeGame(this.nextSibling.textContent = this.value)">20</label>
     <button onclick="makeGame(this.previousElementSibling.firstElementChild.value)">try another</button>
     <details>
@@ -42,20 +42,21 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 canvas.width = window.innerWidth - 50;
 canvas.height = window.innerHeight - 50;
+const rect = canvas.getBoundingClientRect();
 
 let playing, snapshot;
 const gameOverMessage = (msg, color, freq, type) => { if (playing) replay.hidden = playing = false, playTone(audioCtx, freq, type), overlayMessage(canvas, ctx, msg, color); };
-const lose = () => gameOverMessage("You Lost!", "red", 100, "square");
-const win = () => gameOverMessage(`You Win! (${timeEl.textContent}ms)`, "lime", 700, "triangle");
-const pixelColorAt = (x, y) => closestColor({ blue:[0, 0, 255], lime:[0, 255, 0], white:[255, 255, 255], other: [0,0,0] }, ...ctx.getImageData(x, y, 1, 1).data);
+const lose = (reason) => gameOverMessage(`You Lost!(${reason})`, "red", 100, "square");
+const win = () => gameOverMessage(`You Win! (${timeEl.textContent}s)`, "lime", 700, "triangle");
+const pixelColorAt = (e) => closestColor({ blue:[0, 0, 255], lime:[0, 255, 0], white:[255, 255, 255], other: [0,0,0] }, ...ctx.getImageData(e.offsetX, e.offsetY, 1, 1).data);
 const makeGame = (pathWidth) => (replay.hidden=true,canvas.style.borderColor = "gray",snapshot = drawGame(canvas, ctx, +pathWidth));
-const tick = (t0) => { if (playing) timeEl.textContent = Math.floor(performance.now() - t0), requestAnimationFrame(() => tick(t0)) };
+const tick = (t0) => { if (playing) timeEl.textContent = Math.floor(performance.now() - t0)/1000, requestAnimationFrame(() => tick(t0)) };
 
-canvas.addEventListener("pointerdown", e => { if (playing = pixelColorAt(e.offsetX, e.offsetY) === "blue") tick(performance.now()), canvas.style.borderColor = "red"; });
-canvas.addEventListener("pointermove", e => { if (playing) ({ "lime": win, "other": lose })[pixelColorAt(e.offsetX, e.offsetY)]?.(); });
-window.addEventListener("pointerup", lose)
-window.addEventListener("pointercancel", lose);
-canvas.addEventListener("pointerleave", lose);
+canvas.addEventListener("pointerdown", e => { if (playing = pixelColorAt(e) === "blue") tick(performance.now()), canvas.style.borderColor = "red"; });
+canvas.addEventListener("pointermove", e => { if (playing) ({ "lime": win, "other": lose })[pixelColorAt(e)]?.(`outofpath`); });
+window.addEventListener("pointerup", () => lose("pointerup"))
+window.addEventListener("pointercancel", () => lose("pointercancel"));
+canvas.addEventListener("pointerleave", () => lose("pointerleave"));
 
 makeGame(20);
 </script>
